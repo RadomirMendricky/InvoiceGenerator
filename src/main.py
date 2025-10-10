@@ -1,0 +1,158 @@
+"""Hlavní vstupní bod aplikace - CLI rozhraní."""
+
+import typer
+from pathlib import Path
+from typing import Optional
+
+from invoice_generator import InvoiceGenerator
+
+
+# Inicializace Typer aplikace
+app = typer.Typer(
+    help="Generator ceskych faktur - vytvari realisticke faktury pro testovani",
+    add_completion=False
+)
+
+
+@app.command()
+def generate(
+    count: int = typer.Option(1, "--count", "-c", help="Počet faktur k vygenerování"),
+    mode: str = typer.Option("pdf", "--mode", "-m", 
+                            help="Režim: pdf, qr, isdoc"),
+    template: str = typer.Option("classic", "--template", "-t", 
+                                help="Šablona: classic, modern, minimal"),
+    output_dir: str = typer.Option("output", "--output", "-o", 
+                                  help="Výstupní adresář"),
+    demo: bool = typer.Option(False, "--demo", "-d", 
+                             help="Spustit demo režim (ignoruje ostatní parametry)")
+):
+    """
+    Generuje české faktury s náhodnými realistickými údaji.
+    
+    Příklady použití:
+    
+    # Vygenerovat 10 klasických faktur
+    python main.py --count 10
+    
+    # Vygenerovat 5 faktur s QR kódem, moderní šablona
+    python main.py --count 5 --mode qr --template modern
+    
+    # Vygenerovat faktury s ISDOC
+    python main.py --count 3 --mode isdoc
+    
+    # Spustit demo režim
+    python main.py --demo
+    """
+    try:
+        # Vytvoření generátoru
+        generator = InvoiceGenerator(output_dir=output_dir)
+        
+        # Demo režim
+        if demo:
+            typer.echo("Spoustim DEMO rezim...\n")
+            generator.generate_demo()
+            typer.echo("\nDemo dokonceno!")
+            return
+        
+        # Validace parametrů
+        valid_modes = ['pdf', 'qr', 'isdoc']
+        if mode not in valid_modes:
+            typer.echo(f"[!] Chyba: Neplatny rezim '{mode}'", err=True)
+            typer.echo(f"    Podporovane rezimy: {', '.join(valid_modes)}", err=True)
+            raise typer.Exit(1)
+        
+        valid_templates = ['classic', 'modern', 'minimal']
+        if template not in valid_templates:
+            typer.echo(f"[!] Chyba: Neplatna sablona '{template}'", err=True)
+            typer.echo(f"    Podporovane sablony: {', '.join(valid_templates)}", err=True)
+            raise typer.Exit(1)
+        
+        if count < 1:
+            typer.echo("[!] Chyba: Pocet faktur musi byt alespon 1", err=True)
+            raise typer.Exit(1)
+        
+        # Generování
+        typer.echo(f"Rezim: {mode}")
+        typer.echo(f"Sablona: {template}")
+        typer.echo(f"Pocet: {count}")
+        typer.echo(f"Vystup: {output_dir}\n")
+        
+        if count == 1:
+            result = generator.generate_invoice(mode=mode, template=template)
+            typer.echo("\n[OK] Faktura vygenerovana!")
+            for file_type, file_path in result.items():
+                typer.echo(f"     {file_type.upper()}: {file_path}")
+        else:
+            results = generator.generate_batch(count, mode=mode, template=template)
+            typer.echo(f"\n[OK] Vygenerovano {len(results)}/{count} faktur!")
+        
+    except KeyboardInterrupt:
+        typer.echo("\n\n[!] Generovani preruseno uzivatelem", err=True)
+        raise typer.Exit(130)
+    
+    except Exception as e:
+        typer.echo(f"\n[!] Neocekavana chyba: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command()
+def info():
+    """Zobrazí informace o aplikaci."""
+    info_text = """
+    Generator ceskych faktur
+    ========================
+    
+    Verze: 1.0.0
+    Autor: Invoice Generator Team
+    
+    Funkce:
+    - Generovani PDF faktur (3 sablony)
+    - QR kody pro platby (cesky standard SPD)
+    - ISDOC XML export
+    - Realisticka ceska data (firmy, adresy, ICO, DIC, IBAN)
+    
+    Podporovane rezimy:
+    - pdf     - Standardni PDF faktura
+    - qr      - PDF faktura s QR kodem pro platbu
+    - isdoc   - PDF faktura + ISDOC XML soubor
+    
+    Dostupne sablony:
+    - classic - Tradicni modry design
+    - modern  - Moderni zeleno-oranzovy design
+    - minimal - Cisty cernobily design
+    
+    Pro napovedu: python main.py --help
+    """
+    typer.echo(info_text)
+
+
+@app.command()
+def version():
+    """Zobrazí verzi aplikace."""
+    typer.echo("Invoice Generator v1.0.0")
+
+
+@app.command()
+def test_diakritika():
+    """Otestuje správné zobrazení české diakritiky v PDF."""
+    try:
+        from test_diakritika import test_all_templates
+        
+        typer.echo("\n=== TEST CESKE DIAKRITIKY ===\n")
+        success = test_all_templates()
+        
+        if success:
+            typer.echo("\n[OK] Test dokoncen uspesne!")
+            typer.echo("Zkontrolujte vygenerovane PDF v output/test_diakritika_*.pdf")
+        else:
+            typer.echo("\n[!] Test selhal!", err=True)
+            raise typer.Exit(1)
+            
+    except Exception as e:
+        typer.echo(f"\n[!] Chyba behem testu: {e}", err=True)
+        raise typer.Exit(1)
+
+
+if __name__ == "__main__":
+    app()
+
