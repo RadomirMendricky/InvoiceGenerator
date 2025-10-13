@@ -49,30 +49,3 @@ python main.py generate --count 5 --mode isdoc
 python main.py generate --template modern
 ```
 
-## 📁 Struktura
-
-```
-src/
-├── main.py              # Hlavní aplikace
-├── invoice_generator.py # Generování faktur
-├── data_utils.py        # Generování dat
-├── qr_generator.py      # QR kódy
-├── isdoc_generator.py   # ISDOC XML
-├── models/              # Datové modely
-├── pdf_templates/       # PDF šablony
-├── fonts/               # Fonty s diakritikou
-└── utils/               # Pomocné funkce
-```
-
-## ✅ Vlastnosti
-
-- ✅ Plná podpora české diakritiky (DejaVu Sans)
-- ✅ Validace IČO, DIČ, IBAN
-- ✅ QR kódy pro platby (SPD standard)
-- ✅ ISDOC XML embedováno v PDF
-- ✅ CLI rozhraní
-- ✅ 30+ testů
-
-## 📝 Licence
-
-MIT License - volné použití pro komerční i nekomerční účely.
