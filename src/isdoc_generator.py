@@ -294,10 +294,72 @@ class ISDOCGenerator:
         id_elem.text = invoice.variable_symbol
 
 
+def attach_isdoc_to_pdf(invoice: Invoice, pdf_path: str, output_xml: str = None):
+    """
+    Připojí ISDOC XML k existujícímu PDF souboru.
+    
+    Args:
+        invoice: Instance faktury
+        pdf_path: Cesta k existujícímu PDF (bude přepsáno)
+        output_xml: Cesta k výstupnímu XML (volitelné, pro samostatný soubor)
+    """
+    import tempfile
+    import os
+    import PyPDF2
+    
+    # Vytvoření dočasného XML souboru
+    temp_xml = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8')
+    temp_xml_path = temp_xml.name
+    temp_xml.close()
+    
+    try:
+        # Vygenerování ISDOC XML
+        ISDOCGenerator.generate(invoice, temp_xml_path)
+        
+        # Přečtení XML obsahu
+        with open(temp_xml_path, 'r', encoding='utf-8') as f:
+            xml_content = f.read()
+        
+        # Pokud je zadána cesta pro samostatný XML, zkopíruj ho tam
+        if output_xml:
+            import shutil
+            shutil.copy(temp_xml_path, output_xml)
+            
+        # Přečtení PDF a přidání přílohy
+        # Musíme načíst celý soubor do paměti nebo použít dočasný soubor pro výstup
+        # PyPDF2 neumí číst a zapisovat do stejného souboru najednou
+        
+        with open(pdf_path, 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            pdf_writer = PyPDF2.PdfWriter()
+            
+            # Kopírování všech stránek
+            for page in pdf_reader.pages:
+                pdf_writer.add_page(page)
+            
+            # Přidání XML jako attachment
+            pdf_writer.add_attachment('isdoc.xml', xml_content.encode('utf-8'))
+            
+            # Uložení do dočasného souboru
+            temp_pdf = tempfile.NamedTemporaryFile(mode='wb', suffix='.pdf', delete=False)
+            temp_pdf_path = temp_pdf.name
+            pdf_writer.write(temp_pdf)
+            temp_pdf.close()
+            
+        # Přepsání původního souboru
+        import shutil
+        shutil.move(temp_pdf_path, pdf_path)
+        
+    finally:
+        # Úklid
+        if os.path.exists(temp_xml_path):
+            os.unlink(temp_xml_path)
+
 def generate_invoice_with_isdoc(invoice: Invoice, template_class, 
                                 output_pdf: str, output_xml: str = None):
     """
     Generuje fakturu s ISDOC XML embedovaným přímo v PDF.
+    (Zachováno pro zpětnou kompatibilitu, ale doporučuje se použít nový flow)
     
     Args:
         invoice: Instance faktury
@@ -305,56 +367,12 @@ def generate_invoice_with_isdoc(invoice: Invoice, template_class,
         output_pdf: Cesta k výstupnímu PDF
         output_xml: Cesta k výstupnímu XML (volitelné, pro samostatný soubor)
     """
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import A4
-    import xml.etree.ElementTree as ET
-    import tempfile
-    import os
-    
-    # Vytvoření dočasného XML souboru
-    temp_xml = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8')
-    temp_xml_path = temp_xml.name
-    temp_xml.close()
-    
-    # Vygenerování ISDOC XML
-    ISDOCGenerator.generate(invoice, temp_xml_path)
-    
     # Standardní vygenerování PDF
     template = template_class()
     template.generate(invoice, output_pdf)
     
-    # Přečtení XML obsahu
-    with open(temp_xml_path, 'r', encoding='utf-8') as f:
-        xml_content = f.read()
-    
-    # Přidání XML jako embedded file do existujícího PDF
-    from reportlab.pdfgen.canvas import Canvas
-    from reportlab.lib.utils import ImageReader
-    import PyPDF2
-    
-    # Přečtení vygenerovaného PDF
-    with open(output_pdf, 'rb') as pdf_file:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        pdf_writer = PyPDF2.PdfWriter()
-        
-        # Kopírování všech stránek
-        for page in pdf_reader.pages:
-            pdf_writer.add_page(page)
-        
-        # Přidání XML jako attachment
-        pdf_writer.add_attachment('isdoc.xml', xml_content.encode('utf-8'))
-        
-        # Uložení upraveného PDF
-        with open(output_pdf, 'wb') as output_file:
-            pdf_writer.write(output_file)
-    
-    # Pokud je zadána cesta pro samostatný XML, zkopíruj ho tam
-    if output_xml:
-        import shutil
-        shutil.copy(temp_xml_path, output_xml)
-    
-    # Smazání dočasného XML
-    os.unlink(temp_xml_path)
+    # Připojení ISDOC
+    attach_isdoc_to_pdf(invoice, output_pdf, output_xml)
     
     print(f"[OK] ISDOC XML vloženo do PDF: {output_pdf}")
 

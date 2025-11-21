@@ -160,7 +160,6 @@ class ModernTemplate(BaseTemplate):
         col_unit = self.page_width - 90 * mm
         col_price = self.page_width - 70 * mm
         col_vat = self.page_width - 45 * mm
-        col_total = self.page_width - 30 * mm
         
         # Hlavička - barevná
         header_height = 7 * mm
@@ -176,7 +175,7 @@ class ModernTemplate(BaseTemplate):
         c.drawString(col_unit, header_y, "J.")
         c.drawString(col_price, header_y, "CENA/J")
         c.drawString(col_vat, header_y, "DPH")
-        c.drawString(col_total, header_y, "CELKEM")
+        c.drawRightString(self.page_width - self.margin, header_y, "CELKEM")
         
         y_pos -= header_height + 3 * mm
         c.setFillColor(colors_scheme['text'])
@@ -202,7 +201,7 @@ class ModernTemplate(BaseTemplate):
             c.drawRightString(col_price + 20 * mm, y_pos - 3.5 * mm, 
                             self.format_price(item.unit_price))
             c.drawString(col_vat, y_pos - 3.5 * mm, f"{item.vat_rate}%")
-            c.drawRightString(col_total + 25 * mm, y_pos - 3.5 * mm, 
+            c.drawRightString(self.page_width - self.margin, y_pos - 3.5 * mm, 
                             self.format_price(item.total_price_with_vat))
             
             y_pos -= 5 * mm
@@ -217,7 +216,7 @@ class ModernTemplate(BaseTemplate):
         
         # Souhrn na pravé straně
         x_label = self.page_width - 100 * mm
-        x_value = self.page_width - 25 * mm
+        x_value = self.page_width - self.margin
         
         c.setFont(self.font_regular, 9)
         c.setFillColor(colors_scheme['text'])

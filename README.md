@@ -10,6 +10,18 @@ pip install -r requirements.txt
 ```
 
 ### 2. Spuštění
+# 📄 Invoice Generator
+
+Python aplikace pro generování českých faktur s realistickými náhodnými údaji.
+
+## 🚀 Rychlý start
+
+### 1. Instalace závislostí
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Spuštění
 ```bash
 cd src
 python main.py generate --count 1
@@ -17,10 +29,11 @@ python main.py generate --count 1
 
 ## 📋 Funkce
 
-- **3 režimy:**
-  - `pdf` - Standardní PDF faktura
-  - `qr` - PDF s QR kódem pro platbu
-  - `isdoc` - PDF s embedovaným ISDOC XML (přímo v PDF)
+- **Flexibilní generování:**
+  - Standardní PDF faktura
+  - Možnost přidat **QR kód** pro platbu (`--qr`)
+  - Možnost připojit **ISDOC XML** (`--isdoc`)
+  - Lze kombinovat obojí najednou!
 
 - **3 šablony:**
   - `classic` - Modrý tradiční design
@@ -36,16 +49,15 @@ python main.py generate --count 1
 ## 💡 Příklady použití
 
 ```bash
-# 1 faktura
+# 1 standardní faktura
 python main.py generate --count 1
 
 # 10 faktur s QR kódem
-python main.py generate --count 10 --mode qr
+python main.py generate --count 10 --qr
 
-# 5 faktur s ISDOC
-python main.py generate --count 5 --mode isdoc
+# 5 faktur s ISDOC a QR kódem (vše v jednom PDF)
+python main.py generate --count 5 --isdoc --qr
 
-# Moderní šablona
-python main.py generate --template modern
+# Moderní šablona s QR kódem
+python main.py generate --template modern --qr
 ```
-

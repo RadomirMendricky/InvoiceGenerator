@@ -17,8 +17,8 @@ app = typer.Typer(
 @app.command()
 def generate(
     count: int = typer.Option(1, "--count", "-c", help="Počet faktur k vygenerování"),
-    mode: str = typer.Option("pdf", "--mode", "-m", 
-                            help="Režim: pdf, qr, isdoc"),
+    qr: bool = typer.Option(False, "--qr", "-q", help="Přidat QR kód"),
+    isdoc: bool = typer.Option(False, "--isdoc", "-i", help="Připojit ISDOC XML"),
     template: str = typer.Option("classic", "--template", "-t", 
                                 help="Šablona: classic, modern, minimal"),
     output_dir: str = typer.Option("output", "--output", "-o", 
@@ -35,10 +35,10 @@ def generate(
     python main.py --count 10
     
     # Vygenerovat 5 faktur s QR kódem, moderní šablona
-    python main.py --count 5 --mode qr --template modern
+    python main.py --count 5 --qr --template modern
     
-    # Vygenerovat faktury s ISDOC
-    python main.py --count 3 --mode isdoc
+    # Vygenerovat faktury s ISDOC i QR kódem
+    python main.py --count 3 --isdoc --qr
     
     # Spustit demo režim
     python main.py --demo
@@ -55,12 +55,6 @@ def generate(
             return
         
         # Validace parametrů
-        valid_modes = ['pdf', 'qr', 'isdoc']
-        if mode not in valid_modes:
-            typer.echo(f"[!] Chyba: Neplatny rezim '{mode}'", err=True)
-            typer.echo(f"    Podporovane rezimy: {', '.join(valid_modes)}", err=True)
-            raise typer.Exit(1)
-        
         valid_templates = ['classic', 'modern', 'minimal']
         if template not in valid_templates:
             typer.echo(f"[!] Chyba: Neplatna sablona '{template}'", err=True)
@@ -72,18 +66,19 @@ def generate(
             raise typer.Exit(1)
         
         # Generování
-        typer.echo(f"Rezim: {mode}")
+        typer.echo(f"QR kod: {'ANO' if qr else 'NE'}")
+        typer.echo(f"ISDOC: {'ANO' if isdoc else 'NE'}")
         typer.echo(f"Sablona: {template}")
         typer.echo(f"Pocet: {count}")
         typer.echo(f"Vystup: {output_dir}\n")
         
         if count == 1:
-            result = generator.generate_invoice(mode=mode, template=template)
+            result = generator.generate_invoice(template=template, with_qr=qr, with_isdoc=isdoc)
             typer.echo("\n[OK] Faktura vygenerovana!")
             for file_type, file_path in result.items():
                 typer.echo(f"     {file_type.upper()}: {file_path}")
         else:
-            results = generator.generate_batch(count, mode=mode, template=template)
+            results = generator.generate_batch(count, template=template, with_qr=qr, with_isdoc=isdoc)
             typer.echo(f"\n[OK] Vygenerovano {len(results)}/{count} faktur!")
         
     except KeyboardInterrupt:
@@ -111,10 +106,9 @@ def info():
     - ISDOC XML export
     - Realisticka ceska data (firmy, adresy, ICO, DIC, IBAN)
     
-    Podporovane rezimy:
-    - pdf     - Standardni PDF faktura
-    - qr      - PDF faktura s QR kodem pro platbu
-    - isdoc   - PDF faktura + ISDOC XML soubor
+    Podporovane moznosti:
+    - --qr    - Prida QR kod pro platbu
+    - --isdoc - Pripoji ISDOC XML soubor (embedovany v PDF)
     
     Dostupne sablony:
     - classic - Tradicni modry design

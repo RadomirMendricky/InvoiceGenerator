@@ -26,15 +26,17 @@ class InvoiceGenerator:
         self.output_dir = ensure_output_dir(output_dir)
     
     def generate_invoice(self, invoice: Invoice = None, 
-                        mode: str = 'pdf',
-                        template: str = 'classic') -> dict:
+                        template: str = 'classic',
+                        with_qr: bool = False,
+                        with_isdoc: bool = False) -> dict:
         """
         Vygeneruje jednu fakturu.
         
         Args:
             invoice: Instance faktury (pokud None, vygeneruje se náhodná)
-            mode: Režim generování ('pdf', 'qr', 'isdoc')
             template: Název šablony ('classic', 'modern', 'minimal')
+            with_qr: Zda přidat QR kód
+            with_isdoc: Zda připojit ISDOC XML
             
         Returns:
             Slovník s cestami k vygenerovaným souborům
@@ -46,54 +48,55 @@ class InvoiceGenerator:
         # Získání třídy šablony
         template_class = get_template(template)
         
-        # Generování podle režimu
-        result = {}
+        # Základní název souboru
+        suffix = ""
+        if with_qr: suffix += "_qr"
+        if with_isdoc: suffix += "_isdoc"
         
-        if mode == 'pdf':
-            # Standardní PDF
-            pdf_path = self.output_dir / generate_filename('invoice', 'pdf', invoice.invoice_number)
-            template_instance = template_class()
-            template_instance.generate(invoice, str(pdf_path))
-            result['pdf'] = str(pdf_path)
+        pdf_filename = generate_filename('invoice' + suffix, 'pdf', invoice.invoice_number)
+        pdf_path = self.output_dir / pdf_filename
+        pdf_path_str = str(pdf_path)
+        
+        # 1. Generování základního PDF
+        template_instance = template_class()
+        template_instance.generate(invoice, pdf_path_str)
+        
+        result = {'pdf': pdf_path_str}
+        
+        # 2. Přidání QR kódu
+        if with_qr:
+            from qr_generator import add_qr_to_existing_pdf
+            add_qr_to_existing_pdf(invoice, pdf_path_str)
             
-        elif mode == 'qr':
-            # PDF s QR kódem
-            pdf_path = self.output_dir / generate_filename('invoice_qr', 'pdf', invoice.invoice_number)
-            generate_invoice_with_qr(invoice, template_class, str(pdf_path))
-            result['pdf'] = str(pdf_path)
-            
-        elif mode == 'isdoc':
-            # PDF s embedovaným ISDOC XML
-            pdf_path = self.output_dir / generate_filename('invoice_isdoc', 'pdf', invoice.invoice_number)
-            generate_invoice_with_isdoc(invoice, template_class, str(pdf_path))
-            result['pdf'] = str(pdf_path)
+        # 3. Přidání ISDOC
+        if with_isdoc:
+            from isdoc_generator import attach_isdoc_to_pdf
+            attach_isdoc_to_pdf(invoice, pdf_path_str)
             result['note'] = 'ISDOC XML embedováno v PDF'
             
-        else:
-            raise ValueError(f"Neznámý režim: {mode}. Podporované: pdf, qr, isdoc")
-        
         return result
     
-    def generate_batch(self, count: int, mode: str = 'pdf', 
-                      template: str = 'classic') -> List[dict]:
+    def generate_batch(self, count: int, template: str = 'classic',
+                      with_qr: bool = False, with_isdoc: bool = False) -> List[dict]:
         """
         Vygeneruje více faktur najednou.
         
         Args:
             count: Počet faktur k vygenerování
-            mode: Režim generování
             template: Název šablony
+            with_qr: Zda přidat QR kód
+            with_isdoc: Zda připojit ISDOC XML
             
         Returns:
             Seznam slovníků s cestami k vygenerovaným souborům
         """
         results = []
         
-        print(f"Generuji {count} faktur v režimu '{mode}' se šablonou '{template}'...")
+        print(f"Generuji {count} faktur (QR={with_qr}, ISDOC={with_isdoc}) se šablonou '{template}'...")
         
         for i in range(count):
             try:
-                result = self.generate_invoice(mode=mode, template=template)
+                result = self.generate_invoice(template=template, with_qr=with_qr, with_isdoc=with_isdoc)
                 results.append(result)
                 print(f"  [{i+1}/{count}] Vygenerováno: {result.get('pdf', 'N/A')}")
             except Exception as e:
@@ -106,7 +109,7 @@ class InvoiceGenerator:
     
     def generate_demo(self) -> List[dict]:
         """
-        Vygeneruje ukázkové faktury ve všech režimech a šablonách.
+        Vygeneruje ukázkové faktury.
         
         Returns:
             Seznam slovníků s cestami k vygenerovaným souborům
@@ -116,19 +119,19 @@ class InvoiceGenerator:
         print("=== DEMO REŽIM ===")
         print("Generuji ukázkové faktury...\n")
         
-        modes = ['pdf', 'qr', 'isdoc']
         templates = ['classic', 'modern', 'minimal']
+        combinations = [
+            (False, False), # Čisté PDF
+            (True, False),  # S QR
+            (False, True),  # S ISDOC
+            (True, True)    # S obojím
+        ]
         
-        # Pro každou kombinaci režimu a šablony (kromě ISDOC, který generujeme jen jednou)
         for template in templates:
-            for mode in modes:
-                # ISDOC generujeme jen s jednou šablonou (classic)
-                if mode == 'isdoc' and template != 'classic':
-                    continue
-                
+            for with_qr, with_isdoc in combinations:
                 try:
-                    print(f"Generuji: {mode} / {template}")
-                    result = self.generate_invoice(mode=mode, template=template)
+                    print(f"Generuji: {template} (QR={with_qr}, ISDOC={with_isdoc})")
+                    result = self.generate_invoice(template=template, with_qr=with_qr, with_isdoc=with_isdoc)
                     results.append(result)
                     
                     for file_type, file_path in result.items():

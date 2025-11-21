@@ -135,14 +135,13 @@ class MinimalTemplate(BaseTemplate):
         col_unit = self.page_width - 85 * mm
         col_price = self.page_width - 65 * mm
         col_vat = self.page_width - 40 * mm
-        col_total = self.page_width - 25 * mm
         
         c.drawString(col_desc, y_pos, "Popis")
         c.drawString(col_qty, y_pos, "Množství")
         c.drawString(col_unit, y_pos, "J.")
         c.drawString(col_price, y_pos, "Cena/j.")
         c.drawString(col_vat, y_pos, "DPH")
-        c.drawString(col_total, y_pos, "Celkem")
+        c.drawRightString(self.page_width - self.margin, y_pos, "Celkem")
         
         y_pos -= 2 * mm
         self.draw_line(c, self.margin, y_pos, self.page_width - self.margin, y_pos,
@@ -164,7 +163,7 @@ class MinimalTemplate(BaseTemplate):
             c.drawRightString(col_price + 20 * mm, y_pos, 
                             self.format_price(item.unit_price))
             c.drawString(col_vat, y_pos, f"{item.vat_rate}%")
-            c.drawRightString(col_total + 20 * mm, y_pos, 
+            c.drawRightString(self.page_width - self.margin, y_pos, 
                             self.format_price(item.total_price_with_vat))
             
             y_pos -= 5 * mm
@@ -182,7 +181,7 @@ class MinimalTemplate(BaseTemplate):
         
         # Souhrn - vpravo, jednoduché
         x_label = self.page_width - 90 * mm
-        x_value = self.page_width - 25 * mm
+        x_value = self.page_width - self.margin
         
         c.setFont(self.font_regular, 9)
         c.setFillColor(colors_scheme['text'])

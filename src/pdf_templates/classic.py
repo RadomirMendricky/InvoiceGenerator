@@ -143,7 +143,6 @@ class ClassicTemplate(BaseTemplate):
         col_unit = self.page_width - 95 * mm
         col_price = self.page_width - 75 * mm
         col_vat = self.page_width - 50 * mm
-        col_total = self.page_width - 35 * mm
         
         header_y = table_y - 5 * mm
         c.drawString(col_desc, header_y, "Popis")
@@ -151,7 +150,7 @@ class ClassicTemplate(BaseTemplate):
         c.drawString(col_unit, header_y, "Jedn.")
         c.drawString(col_price, header_y, "Cena/j.")
         c.drawString(col_vat, header_y, "DPH")
-        c.drawString(col_total, header_y, "Celkem")
+        c.drawRightString(self.page_width - self.margin, header_y, "Celkem")
         
         y_pos = table_y - header_height - 3 * mm
         c.setFillColor(colors_scheme['text'])
@@ -168,7 +167,7 @@ class ClassicTemplate(BaseTemplate):
             c.drawString(col_unit, y_pos, item.unit)
             c.drawRightString(col_price + 20 * mm, y_pos, self.format_price(item.unit_price))
             c.drawString(col_vat, y_pos, f"{item.vat_rate}%")
-            c.drawRightString(col_total + 30 * mm, y_pos, 
+            c.drawRightString(self.page_width - self.margin, y_pos, 
                             self.format_price(item.total_price_with_vat))
             
             y_pos -= 5 * mm
@@ -188,7 +187,7 @@ class ClassicTemplate(BaseTemplate):
         # Souhrn DPH
         vat_summary = invoice.get_vat_summary()
         x_label = self.page_width - 110 * mm
-        x_value = self.page_width - 35 * mm
+        x_value = self.page_width - self.margin
         
         c.setFont(self.font_regular, 9)
         
@@ -237,7 +236,7 @@ class ClassicTemplate(BaseTemplate):
             c.drawString(self.margin, y_pos, invoice.note)
         
         # Patička
-        y_pos = 30 * mm
+        y_pos = 20 * mm
         c.setFont(self.font_regular, 8)
         c.setFillColor(colors_scheme['light_text'])
         c.drawCentredString(self.page_width / 2, y_pos,

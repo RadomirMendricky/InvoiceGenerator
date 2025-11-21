@@ -245,53 +245,92 @@ class QRGenerator:
                 os.unlink(temp_path)
 
 
+def add_qr_to_existing_pdf(invoice: Invoice, pdf_path: str):
+    """
+    Přidá QR kód do existujícího PDF souboru.
+    
+    Args:
+        invoice: Instance faktury
+        pdf_path: Cesta k existujícímu PDF (bude přepsáno)
+    """
+    from reportlab.pdfgen import canvas as pdf_canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    import PyPDF2
+    import tempfile
+    import os
+    
+    # 1. Vytvoření dočasného PDF pouze s QR kódem
+    temp_qr_pdf = tempfile.NamedTemporaryFile(mode='wb', suffix='.pdf', delete=False)
+    temp_qr_path = temp_qr_pdf.name
+    temp_qr_pdf.close()
+    
+    c = pdf_canvas.Canvas(temp_qr_path, pagesize=A4)
+    page_width, page_height = A4
+    
+    # Pozice QR kódu (vpravo dole)
+    qr_x = page_width - 70 * mm
+    qr_y = 35 * mm
+    qr_size = 40  # mm
+    
+    # Vykreslení QR kódu
+    QRGenerator.add_qr_to_template(None, c, invoice, qr_x / mm, qr_y / mm, qr_size)
+    
+    # Popisek QR kódu
+    c.setFont("Helvetica", 8)
+    c.setFillColorRGB(0, 0, 0)
+    c.drawCentredString(qr_x + (qr_size * mm / 2), qr_y - 5 * mm, "Naskenujte pro platbu")
+    
+    c.showPage()
+    c.save()
+    
+    # 2. Sloučení původního PDF a PDF s QR kódem
+    try:
+        with open(pdf_path, 'rb') as original_file, open(temp_qr_path, 'rb') as qr_file:
+            original_reader = PyPDF2.PdfReader(original_file)
+            qr_reader = PyPDF2.PdfReader(qr_file)
+            pdf_writer = PyPDF2.PdfWriter()
+            
+            
+            if len(original_reader.pages) > 0:
+                page = original_reader.pages[0]
+                # Sloučení stránky s QR kódem
+                page.merge_page(qr_reader.pages[0])
+                pdf_writer.add_page(page)
+                
+                for i in range(1, len(original_reader.pages)):
+                    pdf_writer.add_page(original_reader.pages[i])
+            
+            # Uložení do dočasného souboru
+            temp_out_pdf = tempfile.NamedTemporaryFile(mode='wb', suffix='.pdf', delete=False)
+            temp_out_path = temp_out_pdf.name
+            pdf_writer.write(temp_out_pdf)
+            temp_out_pdf.close()
+            
+        # Přepsání původního souboru
+        import shutil
+        shutil.move(temp_out_path, pdf_path)
+        
+    finally:
+        # Úklid
+        if os.path.exists(temp_qr_path):
+            os.unlink(temp_qr_path)
+
+
 def generate_invoice_with_qr(invoice: Invoice, template_class, output_path: str):
     """
     Generuje fakturu s QR kódem.
+    (Zachováno pro zpětnou kompatibilitu)
     
     Args:
         invoice: Instance faktury
         template_class: Třída šablony (ClassicTemplate, ModernTemplate, atd.)
         output_path: Cesta k výstupnímu PDF
     """
-    from reportlab.pdfgen import canvas as pdf_canvas
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.units import mm
-    
-    # Vytvoření PDF s QR kódem
-    template = template_class()
-    
     # Standardní generování faktury
+    template = template_class()
     template.generate(invoice, output_path)
     
-    # Přečtení vygenerovaného PDF a přidání QR kódu
-    # (Pro zjednodušení generujeme znovu s QR kódem)
-    c = pdf_canvas.Canvas(output_path, pagesize=A4)
-    page_width, page_height = A4
-    
-    # Metadata
-    c.setAuthor(invoice.supplier.name)
-    c.setTitle(f"Faktura {invoice.invoice_number}")
-    
-    # Vykreslení šablony
-    template.draw_header(c, invoice)
-    template.draw_body(c, invoice)
-    template.draw_footer(c, invoice)
-    
-    # Přidání QR kódu vpravo dole
-    qr_x = page_width - 70 * mm
-    qr_y = 30 * mm
-    qr_size = 40  # mm
-    
-    QRGenerator.add_qr_to_template(template, c, invoice, 
-                                   qr_x / mm, qr_y / mm, qr_size)
-    
-    # Popisek QR kódu
-    c.setFont(template.font_regular, 8)
-    c.setFillColor(template.get_colors().get('text', (0, 0, 0)))
-    c.drawCentredString(qr_x + (qr_size * mm / 2), qr_y - 5 * mm, 
-                       "Naskenujte pro platbu")
-    
-    c.showPage()
-    c.save()
+    # Přidání QR kódu
+    add_qr_to_existing_pdf(invoice, output_path)
 
