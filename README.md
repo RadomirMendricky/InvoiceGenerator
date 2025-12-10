@@ -61,3 +61,58 @@ python main.py generate --count 5 --isdoc --qr
 # Moderní šablona s QR kódem
 python main.py generate --template modern --qr
 ```
+
+## 🛠️ Pokročilé funkce: Vlastní data
+
+### Konfigurace pomocí JSON
+Můžete nahrát vlastní data faktury pomocí souboru JSON. Umožňuje plně přizpůsobit dodavatele, odběratele, položky a další údaje.
+
+1. Vytvořte soubor `my_invoice.json`:
+```json
+{
+  "invoice_number": "2025001",
+  "supplier": {
+    "name": "Moje Firma s.r.o.",
+    "street": "Hlavní 123",
+    "city": "Praha",
+    "zip_code": "110 00",
+    "ico": "12345678",
+    "dic": "CZ12345678",
+    "country": "Česká republika",
+    "iban": "CZ1234000000000012345678",
+    "bank_name": "Moje Banka"
+  },
+  "customer": {
+    "name": "Zákazník a.s.",
+    "street": "Vedlejší 456",
+    "city": "Brno",
+    "zip_code": "602 00",
+    "ico": "87654321",
+    "dic": "CZ87654321",
+    "country": "Česká republika"
+  },
+  "items": [
+    {
+      "description": "Konzultace",
+      "quantity": 10,
+      "unit": "hod",
+      "unit_price": 1000,
+      "vat_rate": 21
+    }
+  ],
+  "note": "Děkujeme za spolupráci."
+}
+```
+
+2. Spusťte generátor s parametrem `--config`:
+```bash
+python main.py generate --config my_invoice.json
+```
+
+### Cestní doložka (Factoring 4Trans)
+Pro automatické přidání cestní doložky 4Trans do faktury použijte přepínač `--assignment-clause`.
+Doložka bude umístěna na spodní části faktury.
+
+```bash
+python main.py generate --config my_invoice.json --assignment-clause
+```

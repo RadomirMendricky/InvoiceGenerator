@@ -126,7 +126,7 @@ class BaseTemplate(ABC):
             invoice: Instance faktury
             output_path: Cesta k výstupnímu souboru
         """
-        c = canvas.Canvas(output_path, pagesize=A4)
+        c = canvas.Canvas(output_path, pagesize=A4, pageCompression=0)
         
         # Metadata PDF
         c.setAuthor(invoice.supplier.name)
@@ -226,4 +226,44 @@ class BaseTemplate(ABC):
             c.rect(x, y, width, height, fill=1, stroke=0)
         elif stroke_color:
             c.rect(x, y, width, height, fill=0, stroke=1)
+            
+    def draw_assignment_clause(self, c: canvas.Canvas, invoice: Invoice, y_start: float):
+        """
+        Vykreslí cestní doložku (pokud existuje) pod zadanou Y souřadnicí.
+        
+        Args:
+            c: Canvas objekt
+            invoice: Instance faktury
+            y_start: Y souřadnice, kde začít kreslit (horní okraj bloku)
+            
+        Returns:
+            Nová Y pozice (pod blokem)
+        """
+        if not invoice.assignment_clause:
+            return y_start
+            
+        text = invoice.assignment_clause
+        
+        # Nastavení fontu - menší písmo
+        font_size = 7
+        c.setFont(self.font_regular, font_size)
+        c.setFillColor(colors.black)
+        
+        # Obalení textu
+        from reportlab.lib.utils import simpleSplit
+        width = self.page_width - 2 * self.margin
+        lines = simpleSplit(text, self.font_regular, font_size, width)
+        
+        # Výpočet výšky řádku
+        line_height = font_size + 2
+        
+        current_y = y_start - line_height
+        
+        # Vykreslení
+        for line in lines:
+            c.drawCentredString(self.page_width / 2, current_y, line)
+            current_y -= line_height
+            
+        return current_y - 5 * mm # Vrací Y pod tímto blokem s mezerou
+
 

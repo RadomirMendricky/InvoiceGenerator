@@ -1,0 +1,32 @@
+{
+    "invoice_number": "TEST1",
+    "supplier": {
+        "name": "TEST1",
+        "street": "TEST1",
+        "city": "TEST1",
+        "zip_code": "111111",
+        "ico": "11111111",
+        "dic": "CZ11111111",
+        "country": "TEST1",
+        "iban": "CZ1111111111111111111111",
+        "bank_name": "TEST1"
+    },
+    "customer": {
+        "name": "TEST1",
+        "street": "TEST1",
+        "city": "TEST1",
+        "zip_code": "111111",
+        "ico": "11111111",
+        "dic": "CZ11111111",
+        "country": "TEST1"
+    },
+    "items": [
+        {
+            "description": "TEST1",
+            "quantity": 1,
+            "unit": "ks",
+            "unit_price": 1000,
+            "vat_rate": 21
+        }
+    ]
+}

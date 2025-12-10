@@ -244,8 +244,12 @@ class ModernTemplate(BaseTemplate):
         c.drawRightString(self.page_width - self.margin, y_pos - 7 * mm, 
                          self.format_price(invoice.total_with_vat))
         
+        # Cestní doložka 
+        y_clause = y_pos - 15 * mm
+        y_clause = self.draw_assignment_clause(c, invoice, y_clause)
+        
         # Bankovní údaje vlevo
-        y_bank = y_pos - 5 * mm
+        y_bank = y_clause - 5 * mm
         c.setFillColor(colors_scheme['text'])
         c.setFont(self.font_bold, 9)
         c.drawString(self.margin, y_bank, "PLATEBNÍ ÚDAJE")

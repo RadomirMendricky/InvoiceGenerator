@@ -212,8 +212,12 @@ class ClassicTemplate(BaseTemplate):
         c.drawRightString(self.page_width - self.margin, y_pos - 5 * mm, 
                          self.format_price(invoice.total_with_vat))
         
+        # Cestní doložka
+        y_clause = y_pos - 10 * mm
+        y_clause = self.draw_assignment_clause(c, invoice, y_clause)
+        
         # Bankovní údaje
-        y_pos -= 20 * mm
+        y_pos = y_clause - 5 * mm
         c.setFillColor(colors_scheme['text'])
         c.setFont(self.font_bold, 10)
         c.drawString(self.margin, y_pos, "Bankovní spojení:")

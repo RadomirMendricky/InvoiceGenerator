@@ -24,10 +24,12 @@ def generate(
     output_dir: str = typer.Option("output", "--output", "-o", 
                                   help="Výstupní adresář"),
     demo: bool = typer.Option(False, "--demo", "-d", 
-                             help="Spustit demo režim (ignoruje ostatní parametry)")
+                             help="Spustit demo režim (ignoruje ostatní parametry)"),
+    config: str = typer.Option(None, "--config", "-C", help="Cesta k JSON konfiguraci dat"),
+    assignment_clause: bool = typer.Option(False, "--assignment-clause", "-A", help="Přidat cestní doložku pro 4Trans")
 ):
     """
-    Generuje české faktury s náhodnými realistickými údaji.
+    Generuje české faktury s náhodnými nebo konfigurovatelnými daty.
     
     Příklady použití:
     
@@ -53,6 +55,26 @@ def generate(
             generator.generate_demo()
             typer.echo("\nDemo dokonceno!")
             return
+            
+        # Příprava faktury
+        import data_utils
+        if config:
+            if not Path(config).exists():
+                typer.echo(f"[!] Chyba: Konfiguracni soubor '{config}' neexistuje", err=True)
+                raise typer.Exit(1)
+            invoice = data_utils.load_from_json(config)
+            typer.echo(f"Nactena data z: {config}")
+        else:
+            invoice = None 
+            
+        # Aplikace cestní doložky
+        if assignment_clause:
+            if invoice is None:
+                 invoice = data_utils.generate_invoice()
+            
+            invoice.assignment_clause = data_utils.ASSIGNMENT_CLAUSE_4TRANS
+            typer.echo("Pridana cestni dolozka (4Trans)")
+
         
         # Validace parametrů
         valid_templates = ['classic', 'modern', 'minimal']
@@ -73,12 +95,36 @@ def generate(
         typer.echo(f"Vystup: {output_dir}\n")
         
         if count == 1:
-            result = generator.generate_invoice(template=template, with_qr=qr, with_isdoc=isdoc)
+            result = generator.generate_invoice(invoice=invoice, template=template, with_qr=qr, with_isdoc=isdoc)
             typer.echo("\n[OK] Faktura vygenerovana!")
             for file_type, file_path in result.items():
                 typer.echo(f"     {file_type.upper()}: {file_path}")
         else:
-            results = generator.generate_batch(count, template=template, with_qr=qr, with_isdoc=isdoc)
+            
+            
+            if config:
+                 typer.echo("[WARN] Batch generovani s configem pouzije stejna data pro vsechny faktury.")
+                 
+            results = []
+            print(f"Generuji {count} faktur (QR={with_qr}, ISDOC={with_isdoc}) se šablonou '{template}'...")
+            
+            for i in range(count):
+                try:
+                    current_invoice = None
+                    if config:
+                         current_invoice = data_utils.load_from_json(config)
+                    
+                    if assignment_clause:
+                        if current_invoice is None:
+                            current_invoice = data_utils.generate_invoice()
+                        current_invoice.assignment_clause = data_utils.ASSIGNMENT_CLAUSE_4TRANS
+                    
+                    result = generator.generate_invoice(invoice=current_invoice, template=template, with_qr=qr, with_isdoc=isdoc)
+                    results.append(result)
+                    print(f"  [{i+1}/{count}] Vygenerováno: {result.get('pdf', 'N/A')}")
+                except Exception as e:
+                    print(f"  [{i+1}/{count}] Chyba: {e}")
+            
             typer.echo(f"\n[OK] Vygenerovano {len(results)}/{count} faktur!")
         
     except KeyboardInterrupt:

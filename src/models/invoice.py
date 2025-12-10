@@ -33,6 +33,7 @@ class Invoice:
     variable_symbol: str = ""
     payment_method: str = "bankovní převod"
     note: str = ""
+    assignment_clause: str = ""
 
     def __post_init__(self):
         """Inicializace a validace dat."""

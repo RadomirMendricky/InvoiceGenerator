@@ -256,7 +256,7 @@ def add_qr_to_existing_pdf(invoice: Invoice, pdf_path: str):
     from reportlab.pdfgen import canvas as pdf_canvas
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
-    import PyPDF2
+    import pypdf
     import tempfile
     import os
     
@@ -287,9 +287,9 @@ def add_qr_to_existing_pdf(invoice: Invoice, pdf_path: str):
     # 2. Sloučení původního PDF a PDF s QR kódem
     try:
         with open(pdf_path, 'rb') as original_file, open(temp_qr_path, 'rb') as qr_file:
-            original_reader = PyPDF2.PdfReader(original_file)
-            qr_reader = PyPDF2.PdfReader(qr_file)
-            pdf_writer = PyPDF2.PdfWriter()
+            original_reader = pypdf.PdfReader(original_file)
+            qr_reader = pypdf.PdfReader(qr_file)
+            pdf_writer = pypdf.PdfWriter()
             
             
             if len(original_reader.pages) > 0:

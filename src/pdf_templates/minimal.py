@@ -208,8 +208,12 @@ class MinimalTemplate(BaseTemplate):
         c.setFont(self.font_bold, 14)
         c.drawRightString(self.page_width - self.margin, y_pos, self.format_price(invoice.total_with_vat))
         
+        # Cestní doložka
+        y_clause = y_pos - 10 * mm
+        y_clause = self.draw_assignment_clause(c, invoice, y_clause)
+        
         # Bankovní údaje - vlevo dole
-        y_bank = y_pos - 5 * mm
+        y_bank = y_clause - 5 * mm
         c.setFont(self.font_regular, 8)
         c.setFillColor(colors_scheme['text'])
         

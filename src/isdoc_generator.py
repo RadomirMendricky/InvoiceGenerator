@@ -305,7 +305,7 @@ def attach_isdoc_to_pdf(invoice: Invoice, pdf_path: str, output_xml: str = None)
     """
     import tempfile
     import os
-    import PyPDF2
+    import pypdf
     
     # Vytvoření dočasného XML souboru
     temp_xml = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8')
@@ -330,8 +330,8 @@ def attach_isdoc_to_pdf(invoice: Invoice, pdf_path: str, output_xml: str = None)
         # PyPDF2 neumí číst a zapisovat do stejného souboru najednou
         
         with open(pdf_path, 'rb') as pdf_file:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
-            pdf_writer = PyPDF2.PdfWriter()
+            pdf_reader = pypdf.PdfReader(pdf_file)
+            pdf_writer = pypdf.PdfWriter()
             
             # Kopírování všech stránek
             for page in pdf_reader.pages:

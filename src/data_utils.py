@@ -13,6 +13,14 @@ from models.invoice import Invoice
 fake = Faker('cs_CZ')
 Faker.seed()
 
+ASSIGNMENT_CLAUSE_4TRANS = """Dodavatel tímto neodvolatelně oznamuje odběrateli, že pohledávku, vyúčtovanou tímto 
+daňovým dokladem včetně jejího příslušenství a souvisejících práv, postoupil obchodní 
+společnosti 4Trans IČO: 06760881, se sídlem: Karmelitská 379/18, Praha 1, 118 00, Česká republika. Z 
+toho důvodu je nutné poukázat veškeré platby na pohledávku vyúčtovanou tímto daňovým 
+dokladem výhradně na bankovní účet společnosti 4Trans uvedený na tomto daňovém dokladu. 
+Závazek odběratele zaniká pouze splněním dluhu obchodní společnosti Malcom Finance s.r.o., 
+nebude-li společností Malcom Finance s.r.o. odběrateli oznámeno jinak."""
+
 
 # České názvy firem - přípony a typy
 COMPANY_TYPES = ['s.r.o.', 'a.s.', 'v.o.s.']
@@ -275,4 +283,70 @@ def generate_invoices(count: int) -> list[Invoice]:
         Seznam faktur
     """
     return [generate_invoice() for _ in range(count)]
+
+
+def load_from_json(path: str) -> Invoice:
+    """
+    Načte fakturu z JSON souboru.
+    
+    Args:
+        path: Cesta k JSON souboru
+        
+    Returns:
+        Instance Invoice
+    """
+    import json
+    from datetime import datetime
+
+    with open(path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # Helper pro parsování data
+    def parse_date(d_str):
+        if not d_str: return date.today()
+        try:
+            return datetime.strptime(d_str, "%Y-%m-%d").date()
+        except ValueError:
+            return date.today()
+
+    # Načtení firem
+    supplier_data = data.get('supplier', {})
+    customer_data = data.get('customer', {})
+    
+    # Fallback pro chybějící data firmy - generuj náhodně, ale použij co je k dispozici
+    # Zde předpokládáme, že pokud je JSON zadán, uživatel chce specifikovat konkrétní data
+    # Ale pro zjednodušení, pokud chybí celá sekce, vygenerujeme náhodnou
+    
+    if not supplier_data:
+        supplier = generate_czech_company()
+    else:
+        supplier = Company(**supplier_data)
+        
+    if not customer_data:
+        customer = generate_czech_company()
+    else:
+        customer = Company(**customer_data)
+        
+    # Načtení položek
+    items_data = data.get('items', [])
+    items = []
+    if items_data:
+        for item_d in items_data:
+            items.append(Item(**item_d))
+    else:
+        items = generate_items()
+
+    # Ostatní pole
+    return Invoice(
+        invoice_number=data.get('invoice_number', generate_invoice_number()),
+        supplier=supplier,
+        customer=customer,
+        items=items,
+        issue_date=parse_date(data.get('issue_date')),
+        due_date=parse_date(data.get('due_date')),
+        variable_symbol=data.get('variable_symbol', ""),
+        payment_method=data.get('payment_method', "bankovní převod"),
+        note=data.get('note', ""),
+        assignment_clause=data.get('assignment_clause', "")
+    )
 
