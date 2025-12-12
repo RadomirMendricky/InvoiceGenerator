@@ -53,7 +53,7 @@ class InvoiceGenerator:
         if with_qr: suffix += "_qr"
         if with_isdoc: suffix += "_isdoc"
         
-        pdf_filename = generate_filename('invoice' + suffix, 'pdf', invoice.invoice_number)
+        pdf_filename = generate_filename('invoice' + suffix, 'pdf', invoice.invoice_number, self.output_dir)
         pdf_path = self.output_dir / pdf_filename
         pdf_path_str = str(pdf_path)
         

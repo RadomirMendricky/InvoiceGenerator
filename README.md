@@ -109,10 +109,23 @@ Můžete nahrát vlastní data faktury pomocí souboru JSON. Umožňuje plně p�
 python main.py generate --config my_invoice.json
 ```
 
-### Cestní doložka (Factoring 4Trans)
-Pro automatické přidání cestní doložky 4Trans do faktury použijte přepínač `--assignment-clause`.
-Doložka bude umístěna na spodní části faktury.
+- `config`: (string) Cesta k JSON souboru s definicí faktury.
+- `assignment_clause`: (string, v JSON) Text cestní doložky.
+- `use_assignment_clause`: (bool, v JSON) Zapnutí cestní doložky.
 
-```bash
-python main.py generate --config my_invoice.json --assignment-clause
+### Generování více faktur s konfigurací
+
+Pokud použijete `--config` spolu s `--count` > 1, generátor použije stejná data pro všechny faktury, ale automaticky:
+1. Pokud soubor již existuje, automaticky k názvu přidá časové razítko (např. `_20251212_123000`), aby nedošlo k přepsání.
+
+
+### Cestní doložka (Factoring)
+
+Pro přidání doložky (např. 4Trans) přidejte do JSON konfigurace:
+
+```json
+{
+  "use_assignment_clause": true,
+  "assignment_clause_text": "Vlastní text doložky... (nepovinné)"
+}
 ```

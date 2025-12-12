@@ -28,5 +28,7 @@
             "unit_price": 1000,
             "vat_rate": 21
         }
-    ]
+    ],
+    "use_assignment_clause": true,
+    "assignment_clause_text": "Test assignment clause text"
 }

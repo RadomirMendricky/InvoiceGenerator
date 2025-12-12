@@ -337,6 +337,16 @@ def load_from_json(path: str) -> Invoice:
         items = generate_items()
 
     # Ostatní pole
+
+    # Cestní doložka
+    assignment_clause = data.get('assignment_clause', "")
+    if data.get('use_assignment_clause', False):
+        custom_text = data.get('assignment_clause_text')
+        if custom_text:
+             assignment_clause = custom_text
+        else:
+             assignment_clause = ASSIGNMENT_CLAUSE_4TRANS
+
     return Invoice(
         invoice_number=data.get('invoice_number', generate_invoice_number()),
         supplier=supplier,
@@ -347,6 +357,6 @@ def load_from_json(path: str) -> Invoice:
         variable_symbol=data.get('variable_symbol', ""),
         payment_method=data.get('payment_method', "bankovní převod"),
         note=data.get('note', ""),
-        assignment_clause=data.get('assignment_clause', "")
+        assignment_clause=assignment_clause
     )
 

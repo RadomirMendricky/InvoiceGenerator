@@ -20,7 +20,7 @@ def ensure_output_dir(base_dir: str = "output") -> Path:
     return output_path
 
 
-def generate_filename(prefix: str, extension: str, invoice_number: str = None) -> str:
+def generate_filename(prefix: str, extension: str, invoice_number: str = None, output_dir: Path = None) -> str:
     """
     Generuje unikátní název souboru.
     
@@ -28,6 +28,7 @@ def generate_filename(prefix: str, extension: str, invoice_number: str = None) -
         prefix: Prefix souboru (např. "invoice", "qr", "isdoc")
         extension: Přípona souboru bez tečky (např. "pdf", "xml")
         invoice_number: Číslo faktury (pokud None, použije se timestamp)
+        output_dir: Výstupní adresář pro kontrolu existence souboru
         
     Returns:
         Název souboru
@@ -35,7 +36,16 @@ def generate_filename(prefix: str, extension: str, invoice_number: str = None) -
     if invoice_number:
         # Odstranění lomítek a speciálních znaků
         safe_number = invoice_number.replace("/", "_").replace(" ", "_")
-        return f"{prefix}_{safe_number}.{extension}"
+        filename = f"{prefix}_{safe_number}.{extension}"
+        
+        # Kontrola existence a případné přidání timestampu
+        if output_dir:
+            file_path = output_dir / filename
+            if file_path.exists():
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                filename = f"{prefix}_{safe_number}_{timestamp}.{extension}"
+                
+        return filename
     else:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"{prefix}_{timestamp}.{extension}"

@@ -25,8 +25,7 @@ def generate(
                                   help="Výstupní adresář"),
     demo: bool = typer.Option(False, "--demo", "-d", 
                              help="Spustit demo režim (ignoruje ostatní parametry)"),
-    config: str = typer.Option(None, "--config", "-C", help="Cesta k JSON konfiguraci dat"),
-    assignment_clause: bool = typer.Option(False, "--assignment-clause", "-A", help="Přidat cestní doložku pro 4Trans")
+    config: str = typer.Option(None, "--config", "-C", help="Cesta k JSON konfiguraci dat")
 ):
     """
     Generuje české faktury s náhodnými nebo konfigurovatelnými daty.
@@ -67,13 +66,7 @@ def generate(
         else:
             invoice = None 
             
-        # Aplikace cestní doložky
-        if assignment_clause:
-            if invoice is None:
-                 invoice = data_utils.generate_invoice()
-            
-            invoice.assignment_clause = data_utils.ASSIGNMENT_CLAUSE_4TRANS
-            typer.echo("Pridana cestni dolozka (4Trans)")
+
 
         
         # Validace parametrů
@@ -106,19 +99,15 @@ def generate(
                  typer.echo("[WARN] Batch generovani s configem pouzije stejna data pro vsechny faktury.")
                  
             results = []
-            print(f"Generuji {count} faktur (QR={with_qr}, ISDOC={with_isdoc}) se šablonou '{template}'...")
+            print(f"Generuji {count} faktur (QR={qr}, ISDOC={isdoc}) se šablonou '{template}'...")
             
             for i in range(count):
                 try:
                     current_invoice = None
                     if config:
+                         # Pokaždé načteme znovu, abychom neměli sdílené reference
                          current_invoice = data_utils.load_from_json(config)
-                    
-                    if assignment_clause:
-                        if current_invoice is None:
-                            current_invoice = data_utils.generate_invoice()
-                        current_invoice.assignment_clause = data_utils.ASSIGNMENT_CLAUSE_4TRANS
-                    
+
                     result = generator.generate_invoice(invoice=current_invoice, template=template, with_qr=qr, with_isdoc=isdoc)
                     results.append(result)
                     print(f"  [{i+1}/{count}] Vygenerováno: {result.get('pdf', 'N/A')}")
