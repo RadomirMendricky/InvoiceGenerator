@@ -309,6 +309,9 @@ def load_from_json(path: str) -> Invoice:
         except ValueError:
             return date.today()
 
+    # Validace strict_mode (pokud není definováno, default je True)
+    strict_validation = data.get('strict_validation', True)
+
     # Načtení firem
     supplier_data = data.get('supplier', {})
     customer_data = data.get('customer', {})
@@ -319,13 +322,15 @@ def load_from_json(path: str) -> Invoice:
     
     if not supplier_data:
         supplier = generate_czech_company()
+        supplier.strict_validation = strict_validation
     else:
-        supplier = Company(**supplier_data)
+        supplier = Company(**supplier_data, strict_validation=strict_validation)
         
     if not customer_data:
         customer = generate_czech_company()
+        customer.strict_validation = strict_validation
     else:
-        customer = Company(**customer_data)
+        customer = Company(**customer_data, strict_validation=strict_validation)
         
     # Načtení položek
     items_data = data.get('items', [])
@@ -335,6 +340,35 @@ def load_from_json(path: str) -> Invoice:
             items.append(Item(**item_d))
     else:
         items = generate_items()
+
+    # Zpracování data vystavení
+    issue_date_raw = data.get('issue_date')
+    if isinstance(issue_date_raw, str):
+        if issue_date_raw.lower() == "today":
+            issue_date = date.today()
+        elif issue_date_raw.lower().startswith("today-"):
+            try:
+                days = int(issue_date_raw.split("-")[1])
+                issue_date = date.today() - timedelta(days=days)
+            except ValueError:
+                issue_date = parse_date(issue_date_raw)
+        else:
+             issue_date = parse_date(issue_date_raw)
+    else:
+        issue_date = parse_date(issue_date_raw)
+
+    # Zpracování data splatnosti
+    due_date_raw = data.get('due_date')
+    if due_date_raw:
+        due_date = parse_date(due_date_raw)
+    else:
+        # Pokud není due_date, zkusíme payment_terms_days
+        payment_terms = data.get('payment_terms_days')
+        if payment_terms is not None:
+             due_date = issue_date + timedelta(days=int(payment_terms))
+        else:
+             # Default 14 dní
+             due_date = issue_date + timedelta(days=14)
 
     # Ostatní pole
 
@@ -352,11 +386,12 @@ def load_from_json(path: str) -> Invoice:
         supplier=supplier,
         customer=customer,
         items=items,
-        issue_date=parse_date(data.get('issue_date')),
-        due_date=parse_date(data.get('due_date')),
+        issue_date=issue_date,
+        due_date=due_date,
         variable_symbol=data.get('variable_symbol', ""),
         payment_method=data.get('payment_method', "bankovní převod"),
         note=data.get('note', ""),
-        assignment_clause=assignment_clause
+        assignment_clause=assignment_clause,
+        currency=data.get('currency', "CZK")
     )
 

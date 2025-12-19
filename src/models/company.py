@@ -33,28 +33,33 @@ class Company:
     bank_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
+    strict_validation: bool = True
 
     def __post_init__(self):
         """Validace dat po inicializaci."""
-        self._validate_ico()
-        self._validate_dic()
-        if self.iban:
-            self._validate_iban()
+        if self.strict_validation:
+            self._validate_ico()
+            self._validate_dic()
+            if self.iban:
+                self._validate_iban()
 
     def _validate_ico(self) -> None:
         """Validuje formát IČO (8 číslic)."""
         if not self.ico.isdigit() or len(self.ico) != 8:
-            raise ValueError(f"IČO musí být 8místné číslo: {self.ico}")
+            if self.strict_validation:
+                raise ValueError(f"IČO musí být 8místné číslo: {self.ico}")
 
     def _validate_dic(self) -> None:
         """Validuje formát DIČ (CZ + 8-10 číslic)."""
         if not self.dic.startswith("CZ") or len(self.dic) < 10:
-            raise ValueError(f"DIČ musí začínat CZ a obsahovat 8-10 číslic: {self.dic}")
+            if self.strict_validation:
+                raise ValueError(f"DIČ musí začínat CZ a obsahovat 8-10 číslic: {self.dic}")
 
     def _validate_iban(self) -> None:
         """Validuje formát českého IBAN."""
         if not self.iban.startswith("CZ") or len(self.iban) != 24:
-            raise ValueError(f"Český IBAN musí začínat CZ a mít 24 znaků: {self.iban}")
+            if self.strict_validation:
+                raise ValueError(f"Český IBAN musí začínat CZ a mít 24 znaků: {self.iban}")
 
     def format_address(self) -> str:
         """Vrátí formátovanou adresu na více řádků."""

@@ -142,7 +142,7 @@ class QRGenerator:
             f"SPD*1.0*"
             f"ACC:{iban}*"
             f"AM:{amount:.2f}*"
-            f"CC:CZK*"
+            f"CC:{invoice.currency}*"
             f"MSG:{message}*"
             f"X-VS:{vs}"
         )

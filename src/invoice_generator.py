@@ -107,44 +107,5 @@ class InvoiceGenerator:
         
         return results
     
-    def generate_demo(self) -> List[dict]:
-        """
-        Vygeneruje ukázkové faktury.
-        
-        Returns:
-            Seznam slovníků s cestami k vygenerovaným souborům
-        """
-        results = []
-        
-        print("=== DEMO REŽIM ===")
-        print("Generuji ukázkové faktury...\n")
-        
-        templates = ['classic', 'modern', 'minimal']
-        combinations = [
-            (False, False), # Čisté PDF
-            (True, False),  # S QR
-            (False, True),  # S ISDOC
-            (True, True)    # S obojím
-        ]
-        
-        for template in templates:
-            for with_qr, with_isdoc in combinations:
-                try:
-                    print(f"Generuji: {template} (QR={with_qr}, ISDOC={with_isdoc})")
-                    result = self.generate_invoice(template=template, with_qr=with_qr, with_isdoc=with_isdoc)
-                    results.append(result)
-                    
-                    for file_type, file_path in result.items():
-                        print(f"  ✓ {file_type.upper()}: {file_path}")
-                    
-                except Exception as e:
-                    print(f"  ✗ Chyba: {e}")
-                
-                print()
-        
-        print(f"=== KONEC DEMO ===")
-        print(f"Vygenerováno celkem {len(results)} ukázek")
-        print(f"Umístění: {self.output_dir}")
-        
-        return results
+
 

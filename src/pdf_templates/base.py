@@ -141,18 +141,6 @@ class BaseTemplate(ABC):
         c.showPage()
         c.save()
     
-    def format_price(self, amount: int) -> str:
-        """
-        Formátuje částku v Kč.
-        
-        Args:
-            amount: Částka v celých korunách
-            
-        Returns:
-            Formátovaný řetězec
-        """
-        return f"{amount:,} Kč".replace(",", " ")
-    
     def format_date(self, date_obj) -> str:
         """
         Formátuje datum do českého formátu.

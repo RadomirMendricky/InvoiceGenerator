@@ -34,6 +34,7 @@ class Invoice:
     payment_method: str = "bankovní převod"
     note: str = ""
     assignment_clause: str = ""
+    currency: str = "CZK"
 
     def __post_init__(self):
         """Inicializace a validace dat."""
@@ -86,15 +87,24 @@ class Invoice:
         
         return vat_summary
 
+    CURRENCY_SYMBOLS = {
+        'CZK': 'Kč',
+        'EUR': '€',
+        'USD': '$',
+        'GBP': '£'
+    }
+
     def format_price(self, amount: int) -> str:
         """
-        Formátuje částku v Kč.
+        Formátuje částku v dané měně.
         
         Args:
-            amount: Částka v celých korunách
+            amount: Částka v celých číslech
             
         Returns:
-            Formátovaný řetězec s měnou (např. "1 234 Kč")
+            Formátovaný řetězec s měnou (např. "1 234 Kč" nebo "1 234 €")
         """
-        return f"{amount:,} Kč".replace(",", " ")
+        price_str = f"{amount:,}".replace(",", " ")
+        symbol = self.CURRENCY_SYMBOLS.get(self.currency, self.currency)
+        return f"{price_str} {symbol}"
 

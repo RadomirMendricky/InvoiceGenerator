@@ -1,12 +1,13 @@
 {
-    "invoice_number": "TEST1",
+    "invoice_number": "INV-2023-001",
+    "variable_symbol": "1234567890",
     "supplier": {
         "name": "TEST1",
         "street": "TEST1",
         "city": "TEST1",
         "zip_code": "111111",
-        "ico": "11111111",
-        "dic": "CZ11111111",
+        "ico": "111",
+        "dic": "CZ111",
         "country": "TEST1",
         "iban": "CZ1111111111111111111111",
         "bank_name": "TEST1"
@@ -30,5 +31,9 @@
         }
     ],
     "use_assignment_clause": true,
+    "strict_validation": false,
+    "currency": "GBP",
+    "issue_date": "today-14",
+    "payment_terms_days": 14,
     "assignment_clause_text": "Test assignment clause text"
 }

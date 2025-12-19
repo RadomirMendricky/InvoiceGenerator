@@ -161,10 +161,10 @@ class MinimalTemplate(BaseTemplate):
             c.drawString(col_qty, y_pos, str(item.quantity))
             c.drawString(col_unit, y_pos, item.unit)
             c.drawRightString(col_price + 20 * mm, y_pos, 
-                            self.format_price(item.unit_price))
+                            invoice.format_price(item.unit_price))
             c.drawString(col_vat, y_pos, f"{item.vat_rate}%")
             c.drawRightString(self.page_width - self.margin, y_pos, 
-                            self.format_price(item.total_price_with_vat))
+                            invoice.format_price(item.total_price_with_vat))
             
             y_pos -= 5 * mm
         
@@ -189,11 +189,11 @@ class MinimalTemplate(BaseTemplate):
         vat_summary = invoice.get_vat_summary()
         for vat_rate, amounts in vat_summary.items():
             c.drawString(x_label, y_pos, f"Základ DPH {vat_rate}%")
-            c.drawRightString(x_value, y_pos, self.format_price(amounts['base']))
+            c.drawRightString(x_value, y_pos, invoice.format_price(amounts['base']))
             y_pos -= 4 * mm
             
             c.drawString(x_label, y_pos, f"DPH {vat_rate}%")
-            c.drawRightString(x_value, y_pos, self.format_price(amounts['vat']))
+            c.drawRightString(x_value, y_pos, invoice.format_price(amounts['vat']))
             y_pos -= 5 * mm
         
         # Celková částka - pouze čára a zvětšené písmo
@@ -206,7 +206,7 @@ class MinimalTemplate(BaseTemplate):
         c.setFillColor(colors_scheme['primary'])
         c.drawString(x_label, y_pos, "K úhradě")
         c.setFont(self.font_bold, 14)
-        c.drawRightString(self.page_width - self.margin, y_pos, self.format_price(invoice.total_with_vat))
+        c.drawRightString(self.page_width - self.margin, y_pos, invoice.format_price(invoice.total_with_vat))
         
         # Cestní doložka
         y_clause = y_pos - 10 * mm

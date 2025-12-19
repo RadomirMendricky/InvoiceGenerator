@@ -23,8 +23,6 @@ def generate(
                                 help="Šablona: classic, modern, minimal"),
     output_dir: str = typer.Option("output", "--output", "-o", 
                                   help="Výstupní adresář"),
-    demo: bool = typer.Option(False, "--demo", "-d", 
-                             help="Spustit demo režim (ignoruje ostatní parametry)"),
     config: str = typer.Option(None, "--config", "-C", help="Cesta k JSON konfiguraci dat")
 ):
     """
@@ -41,20 +39,11 @@ def generate(
     # Vygenerovat faktury s ISDOC i QR kódem
     python main.py --count 3 --isdoc --qr
     
-    # Spustit demo režim
-    python main.py --demo
     """
     try:
         # Vytvoření generátoru
         generator = InvoiceGenerator(output_dir=output_dir)
         
-        # Demo režim
-        if demo:
-            typer.echo("Spoustim DEMO rezim...\n")
-            generator.generate_demo()
-            typer.echo("\nDemo dokonceno!")
-            return
-            
         # Příprava faktury
         import data_utils
         if config:
@@ -141,9 +130,10 @@ def info():
     - ISDOC XML export
     - Realisticka ceska data (firmy, adresy, ICO, DIC, IBAN)
     
-    Podporovane moznosti:
+    Podporované možnosti:
     - --qr    - Prida QR kod pro platbu
     - --isdoc - Pripoji ISDOC XML soubor (embedovany v PDF)
+    - --config - Cesta k JSON souboru s definicí dat (nyní s podporou striktní validace, měny u jiné než CZK, atd.)
     
     Dostupne sablony:
     - classic - Tradicni modry design

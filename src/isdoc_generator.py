@@ -76,7 +76,7 @@ class ISDOCGenerator:
         
         # Měna
         currency = ET.SubElement(root, 'LocalCurrencyCode')
-        currency.text = 'CZK'
+        currency.text = invoice.currency
         
         # Dodavatel (AccountingSupplierParty)
         ISDOCGenerator._add_party(root, 'AccountingSupplierParty', invoice.supplier)
